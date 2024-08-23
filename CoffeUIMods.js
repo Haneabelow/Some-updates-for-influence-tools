@@ -220,7 +220,6 @@ function ShowOff(selectiontxt,inputdata,outputdata,srs) {
     createOrUpdateContainer(summaryDiv, 'new-summary', summaryContent);
 }
 
-
 // ============================================================== Helper functions ==============================================================
 function extractSRRounds(element){
     // Check if the target element exists
@@ -237,7 +236,7 @@ function extractSRRounds(element){
             const textContent = thirdBElement.textContent.trim();
             
             // Convert the text content to an integer
-            const numberValue = parseInt(textContent.replace(',', ''), 10);
+            const numberValue = parseFloat(textContent.replace(/,/g, ''));
             
             // Check if the conversion was successful and return the result
             if (!isNaN(numberValue)) {
@@ -516,9 +515,7 @@ function AutoProfit() {
                 PreviousPrimary = CurrentPrimary;
                 ShowOff(CurrentSelection,Input,Output,CurrentSr);
             }
-
         }
-        
     }
     
 }
@@ -530,3 +527,9 @@ setInterval(() => {
     AutoProfit();
     openMyAssets();
 }, 1000);
+
+
+async function testing() {
+    console.log(testing);
+
+}
