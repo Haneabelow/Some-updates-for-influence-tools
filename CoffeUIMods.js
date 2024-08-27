@@ -1,3 +1,4 @@
+// version 0.2
 const extensionMySettingsDefault = {
     _autoAllOpenBuildings: false,
     _autoCalculateProfits: false,
@@ -7,7 +8,8 @@ const hudMenuItemLabelMyAssets = 'My Assets';
 const arrowClassOpen = 'sc-gsGlKL eAaTji';
 const arrowClassClose = 'sc-gsGlKL rviqt';
 
-const setUpDivSearch = 'div[label="Set Up"].sc-kIRMQU.biVvEc';
+// Replaced with grandparent selection
+//const setUpDivSearch = 'div[label="Set Up"].sc-kIRMQU.biVvEc';
 
 let AllMyCrews = 0;
 let OpenBuildings = 0;
@@ -124,7 +126,14 @@ function ShowOff(selectiontxt,inputdata,outputdata,srs) {
     summaryDiv.innerHTML = '';
 
     // Calculate total minutes
-    const durationElement = document.querySelector('div.sc-hmTbGb.HwdBV');
+    
+    // XPath search
+    const xpath = "//div[span[contains(text(),'SRs')]]";
+    const durationElement = document.evaluate("//div[span[contains(text(),'SRs')]]", SetUpElement, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue?.parentNode?.firstElementChild;
+    
+    //const durationElement = document.querySelector('div.sc-hmTbGb.HwdBV');
+    //replaced class search
+    
     let totalMinutes = 0;
     
     if (durationElement) {
@@ -453,9 +462,10 @@ function AutoProfit() {
             // Extract Resource window NOT open
             return;
         }
+
+        // Select the parent of the parent
+        SetUpElement = elExtractionHeader.parentElement.parentElement;
         
-        // We will keep watching for windows
-        SetUpElement = document.querySelector(setUpDivSearch);
         if (!SetUpElement) {
             console.error('Element not found, but Production window is open. Update class definitions');
         }
@@ -527,9 +537,3 @@ setInterval(() => {
     AutoProfit();
     openMyAssets();
 }, 1000);
-
-
-async function testing() {
-    console.log(testing);
-
-}
