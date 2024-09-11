@@ -1,4 +1,13 @@
-// version 0.2
+// Version 0.3
+// For Influence Tools 1.0.84_0
+// TODO:
+    // 1. One function to read settings be it mine or influence
+// DONE = 2. UI changes: Lot notice control
+    // 3. UI changes lot numbers in my assets 
+    // 4. Save baaaaar
+    // 4. Change method to setting check for open panels  -> scan value - apply corrections instead of overloading ui
+    
+
 const extensionMySettingsDefault = {
     _autoAllOpenBuildings: false,
     _autoCalculateProfits: false,
@@ -7,9 +16,6 @@ const extensionMySettingsDefault = {
 const hudMenuItemLabelMyAssets = 'My Assets';
 const arrowClassOpen = 'sc-gsGlKL eAaTji';
 const arrowClassClose = 'sc-gsGlKL rviqt';
-
-// Replaced with grandparent selection
-//const setUpDivSearch = 'div[label="Set Up"].sc-kIRMQU.biVvEc';
 
 let AllMyCrews = 0;
 let OpenBuildings = 0;
@@ -24,41 +30,85 @@ let PreviousSr = null;
 let CurrentSr = null;
 let PreviousPrimary = null;
 let CurrentPrimary = null;
+let isMenuInjected = false;
 
+let account_removedNoticesArray = [];
+let account_removedNoticesBoolean = false;
+let account_currentCrew = 0;
+let account_previousCrew = 0;
+let account_LoadStatus = 0;
 
+// ================================== Settings ==================================
 if (!localStorage.getItem('MySettings')) {
     localStorage.setItem('MySettings', JSON.stringify(extensionMySettingsDefault));
 }
 
 const extensionMySettings = JSON.parse(localStorage.getItem('MySettings'));
 
-// ================================== Settings ==================================
+
 function updateMySettings() {
-    let updatePanel = document.getElementById('e115-config-panel-wrapper')
 
-    injectMyConfigOptionCheckbox('All-OpenBuildings', 'Auto Open All Buildings');
-    injectMyConfigOptionCheckbox('Calculate-Profits', 'Calculate All Profits');
-    updatePanel.querySelector('input[name="All-OpenBuildings"]').checked = extensionMySettings._autoAllOpenBuildings;
-    updatePanel.querySelector('input[name="Calculate-Profits"]').checked = extensionMySettings._autoCalculateProfits;
+    if (!isMenuInjected){
+
+        let updatePanel = document.getElementById('e115-config-panel-wrapper')
+        if (updatePanel != null){
+            injectMyConfigOptionCheckbox('All-OpenBuildings', 'Auto Open All Buildings');
+            injectMyConfigOptionCheckbox('Calculate-Profits', 'Calculate All Profits');
+            updatePanel.querySelector('input[name="All-OpenBuildings"]').checked = extensionMySettings._autoAllOpenBuildings;
+            updatePanel.querySelector('input[name="Calculate-Profits"]').checked = extensionMySettings._autoCalculateProfits;  
+            isMenuInjected = true;
+            account_removedNoticesArray = extensionMySettings.RemovedNotices;
+        }
+
+        // to make sure it runs only once
+        //if (extensionMySettings.RemovedNotices == null ) account_removedNoticesArray = [];
+        //else {
+        //    if (account_removedNoticesArray == null || account_removedNoticesArray.length == 0) account_removedNoticesArray = extensionMySettings.RemovedNotices;
+        //}
+    }
 }
-
 function setExtensionMySetting(settingKey, settingValue) {
     extensionMySettings[settingKey] = settingValue;
     localStorage.setItem('MySettings', JSON.stringify(extensionMySettings));
 }
+function GetInfluenceSettings(element) {
+    try {
+        const influenceSettings = JSON.parse(localStorage.getItem('influence'));
+        
+        if (!influenceSettings || !influenceSettings.state) {
+            return -1; // Return default value if structure is invalid
+        }
+
+        switch (element) {
+            case 'selectedCrewId':
+                return influenceSettings.state.selectedCrewId;
+            case 'launcherPage':
+                return influenceSettings.state.launcherPage;
+            case 'openHudMenu':
+                return influenceSettings.state.launcherPage;                
+            default:
+                return 0; 
+        }
+    }
+    catch (error) {
+        console.error('Error parsing localStorage data:', error);
+        return -1; 
+    }
+}
 
 function injectMyConfigOptionCheckbox(optionName, optionDescription, isSecondaryOption = false) {
     const elConfigOptions = document.getElementById('e115-config-options');
-    const elConfigOptionLabel = createEl('label');
-    elConfigOptionLabel.innerHTML = /*html*/ `
-        <input type="checkbox" name="${optionName}" onclick="onClickMyConfigOption(this)"><span>${optionDescription}</span>
-    `;
-    if (isSecondaryOption) {
-        elConfigOptionLabel.classList.add('e115-config-option-secondary')
+    if (elConfigOptions != null){
+        const elConfigOptionLabel = createEl('label');
+        elConfigOptionLabel.innerHTML = /*html*/ `
+            <input type="checkbox" name="${optionName}" onclick="onClickMyConfigOption(this)"><span>${optionDescription}</span>
+        `;
+        if (isSecondaryOption) {
+            elConfigOptionLabel.classList.add('e115-config-option-secondary')
+        }
+        elConfigOptions.append(elConfigOptionLabel);        
     }
-    elConfigOptions.append(elConfigOptionLabel);
 }
-
 function onClickMyConfigOption(el) {
     switch (el.name) {
         case 'All-OpenBuildings':
@@ -171,7 +221,7 @@ function ShowOff(selectiontxt,inputdata,outputdata,srs) {
     // Process Input
     let totalInputCost = 0;
     inputdata.forEach(({ ItemName, ItemAmount, ItemPercentage }) => {
-        const price = prices[ItemName] || 0;
+        const price = cachedData.prices[ItemName] || 0;
         const sr = srs || 1; // Default to 1 if SR is not available
         let reduction = 1;
 
@@ -192,7 +242,7 @@ function ShowOff(selectiontxt,inputdata,outputdata,srs) {
     // Process Output
     let totalOutputCost = 0;
     outputdata.forEach(({ ItemName, ItemAmount, ItemPercentage }) => {
-        const price = prices[ItemName] || 0;
+        const price = cachedData.prices[ItemName] || 0;
         const sr = srs || 1; // Default to 1 if SR is not available
         let reduction = 1;
 
@@ -263,7 +313,6 @@ function extractSRRounds(element){
         return null;
     }
 }
-
 function extractTooltipData(element) {
   // Initialize an array to hold the formatted tooltip data
     const tooltipDataArray = [];
@@ -339,11 +388,9 @@ function extractTooltipData(element) {
     // Return the array of item data objects
     return tooltipDataArray;
 }
-
 function findPrimaryLocationIndex(obj) {
     return obj.findIndex(({ ItemPercentage }) => ItemPercentage === 100);
 }
-
 // Function to format tones
 function formatTones(value) {
     if (value >= 1000) {
@@ -366,7 +413,6 @@ function createOrUpdateContainer(parentElement, id, content) {
     }
     containerDiv.innerHTML = content;
 }
-
 function getColor(number) {
     if (number < 0) {
         return 'red';
@@ -378,6 +424,7 @@ function getColor(number) {
 }
 
 // ============================================================= Main Functions =============================================================
+// Auto open all assets
 function openMyAssets(){
     // is auto Open All Buildings enabled?
     if (extensionMySettings._autoAllOpenBuildings == true){
@@ -450,7 +497,7 @@ function openMyAssets(){
         }
     }
 }
-
+// Auto calculate All profits
 function AutoProfit() {
 
     // is auto Profit Calculation enabled?
@@ -530,10 +577,163 @@ function AutoProfit() {
     
 }
 
-updateMySettings();
-// Run MyChanges function every 1 second
-// Run both functions every 1 second
+// ============================================================= Work on progress =============================================================
+function changesOfNotices(crewId) {
+    const coloredDivs = document.querySelectorAll('div[color="255,152,79"], div[color="255,86,77"]');
+
+    // Function to check if a div contains the specified text in any child element
+    function containsTextInChildren(div, text) {
+        return Array.from(div.querySelectorAll('*')).some(child => 
+            child.textContent.toLowerCase().includes(text.toLowerCase())
+        );
+    }
+
+    const matchingDivs = Array.from(coloredDivs).filter(div => 
+        containsTextInChildren(div, "expir") && containsTextInChildren(div, "Use lot")
+    );
+
+    matchingDivs.forEach(div => {
+        const lotNumberElement = Array.from(div.children).find(child => child.textContent.includes("Lot #"));
+
+        if (lotNumberElement) {
+            const lotId = lotNumberElement.textContent.match(/Lot #(\d+,?\d*,?\d*)/)[1];
+
+            // Get the current date in seconds
+            const currentDateInSeconds = Math.floor(Date.now() / 1000);
+
+            // Create the new element to be added to the RemovedNotices array
+            const newRemovedNotice = {
+                CrewId: crewId,
+                LotId: lotId,
+                DateRemoved: currentDateInSeconds
+            };
+
+            // Check if the notice with this LotId and CrewId is already present in the array
+            const existingNotice = account_removedNoticesArray.find(notice => notice.LotId === lotId && notice.CrewId === crewId);
+
+            if (existingNotice) {
+                // If the notice exists in the array, find and click the button
+                clickNoticeButton(div);
+            } else {
+                // Check if there's already a span with the text '-X-' inside the div
+                const existingSign = Array.from(div.children).find(child => child.tagName === 'SPAN' && child.textContent.includes('-X-'));
+
+                if (!existingSign) {
+                    // Add a sign after "Use Lot" if it doesn't exist
+                    const sign = document.createElement('span');
+                    sign.textContent = ' -X- ';
+                    div.appendChild(sign);
+
+                    // Assign a function to the sign element
+                    sign.addEventListener('click', function() {
+                        // Call RemoveElement with the LotId, CrewId, and the current div as parameters
+                        RemoveElement(lotId, crewId, div);
+                    });
+
+                    // Save the updated array to settings
+                    setExtensionMySetting('RemovedNotices', account_removedNoticesArray);
+                }
+            }
+        } else {
+            console.error('Lot # not found in this div');
+        }
+    });
+}
+// Your function that handles the removal of an element by LotId
+function RemoveElement(LotId, crewId, noticeElement) {
+    // Get current time in seconds
+    const currentDateInSeconds = Math.floor(Date.now() / 1000);
+
+    // Create the new element to be added to the RemovedNotices array
+    const newRemovedNotice = {
+        CrewId: crewId,
+        LotId: LotId,
+        DateRemoved: currentDateInSeconds
+    };
+
+    // Add the new element to the RemovedNotices array if not already present
+    const existingNotice = account_removedNoticesArray.find(notice => notice.LotId === LotId && notice.CrewId === crewId);
+    
+    if (!existingNotice) {
+        account_removedNoticesArray.push(newRemovedNotice);
+    }
+
+    // Save RemovedNotices to extension settings
+    setExtensionMySetting('RemovedNotices', account_removedNoticesArray);
+
+    // Simulate clicking the button instead of removing the div
+    clickNoticeButton(noticeElement);
+}
+// Function to find and click the button inside the notice element
+function clickNoticeButton(noticeElement) {
+    // Find the button element inside the notice (based on the button's role, attributes, or other context)
+    const button = noticeElement.querySelector('button');
+
+    if (button) {
+        // Simulate a click on the button
+        button.click();
+    } else {
+        console.error("Button not found in the notice element.");
+    }
+}
+function Account_IsNoticesVisible(){
+    const elExtractionHeader = document.querySelector('a[href="/listview/eventlog"]');
+    if (!elExtractionHeader) return 0;
+        else return 1;
+
+}
+// Run once on startup to delete old notices
+function cleanOldRemovedNotices() {
+    // Get current date in seconds
+    const currentDateInSeconds = Math.floor(Date.now() / 1000);
+
+    // Define 15 days in seconds (15 * 24 * 60 * 60)
+    const fifteenDaysInSeconds = 15 * 24 * 60 * 60;
+
+    // Filter the array to only keep notices that are less than 15 days old
+    const filteredNotices = account_removedNoticesArray.filter(notice => {
+        // Check if the notice is newer than 15 days
+        return (currentDateInSeconds - notice.DateRemoved) <= fifteenDaysInSeconds;
+    });
+
+    // If any notices were removed, update the array and save to settings
+    if (filteredNotices.length !== account_removedNoticesArray.length) {
+        account_removedNoticesArray = filteredNotices;
+
+        // Save the updated array to extension settings
+        setExtensionMySetting('RemovedNotices', account_removedNoticesArray);
+    }
+}
+
+
 setInterval(() => {
-    AutoProfit();
-    openMyAssets();
+
+    if (account_LoadStatus != 2){
+        if (account_LoadStatus == 1 && GetInfluenceSettings('launcherPage') == null) account_LoadStatus++;
+        if (account_LoadStatus == 0 && GetInfluenceSettings('launcherPage') == "play") account_LoadStatus++;
+    }
+
+    // Account is ready for actions
+    if (account_LoadStatus == 2){
+        updateMySettings(); // injecting tools
+        AutoProfit();
+        openMyAssets();      
+
+        // call notice function to update all crap 
+        account_currentCrew = GetInfluenceSettings('selectedCrewId');
+        // crew change scan
+        if (account_currentCrew != 0 && account_currentCrew != account_previousCrew){
+            if (account_removedNoticesBoolean == false){
+                changesOfNotices(account_currentCrew)
+                account_removedNoticesBoolean = true;
+                account_previousCrew = account_currentCrew;
+            }
+            else { //activate boolean on false on crew change 
+                account_removedNoticesBoolean = false;
+            }
+
+        }
+        
+    }
+
 }, 1000);
