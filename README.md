@@ -10,6 +10,8 @@ No changes needed to original influence tools, works with any kind of influence 
 
    ![image](https://github.com/user-attachments/assets/98c48967-4976-4b43-98a2-e27e88f99b06)
 
+3. Hide un - needed notices forever ! 
+
 
 INSTALLATION FOR GREENS:
 
