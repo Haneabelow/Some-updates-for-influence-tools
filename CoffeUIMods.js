@@ -1,21 +1,24 @@
 // Version 0.3
 // For Influence Tools 1.0.84_0
 // TODO:
-    // 1. One function to read settings be it mine or influence
-// DONE = 2. UI changes: Lot notice control
-    // 3. UI changes lot numbers in my assets 
-    // 4. Save baaaaar
-    // 4. Change method to setting check for open panels  -> scan value - apply corrections instead of overloading ui
+    // 1.a One function to read settings be it mine or influence
+    // 1.b Change scroll bar location to fixed instead of class asap
+//DONE    // 2. UI changes: Lot notice control
+//DONE    // 3. UI changes: Lot numbers in my assets 
+//DONE    // 4. UI changes: scrollbar memory
     
 
 const extensionMySettingsDefault = {
-    _autoAllOpenBuildings: false,
-    _autoCalculateProfits: false,
+    _autoAllOpenBuildings: true,
+    _autoCalculateProfits: true,
+    _autoHideAllNotices: true,
+    _autoRememberMyAssetsScrollBar : true,
+    _autoChangeAllUseLot : true
 }
 
 const hudMenuItemLabelMyAssets = 'My Assets';
-const arrowClassOpen = 'sc-gsGlKL eAaTji';
-const arrowClassClose = 'sc-gsGlKL rviqt';
+const arrowClassOpen = 'sc-csDkEv eIqyZC';
+const arrowClassClose = 'sc-csDkEv etVnJB';
 
 let AllMyCrews = 0;
 let OpenBuildings = 0;
@@ -52,19 +55,19 @@ function updateMySettings() {
 
         let updatePanel = document.getElementById('e115-config-panel-wrapper')
         if (updatePanel != null){
-            injectMyConfigOptionCheckbox('All-OpenBuildings', 'Auto Open All Buildings');
-            injectMyConfigOptionCheckbox('Calculate-Profits', 'Calculate All Profits');
+            injectMyConfigOptionCheckbox('All-OpenBuildings', '"My Assets"> Open ALL Buildings');
+            injectMyConfigOptionCheckbox('Remember-ScrollBar', '"My Assets"> Scrollbar memory');
+            injectMyConfigOptionCheckbox('UseLot-numbered', '"My Assets"> Lot Fields');
+            injectMyConfigOptionCheckbox('Calculate-Profits', 'Manufacture> Show Profits');
+            injectMyConfigOptionCheckbox('Remove-Notices', 'Lot Expiration> Hide forever');
             updatePanel.querySelector('input[name="All-OpenBuildings"]').checked = extensionMySettings._autoAllOpenBuildings;
-            updatePanel.querySelector('input[name="Calculate-Profits"]').checked = extensionMySettings._autoCalculateProfits;  
+            updatePanel.querySelector('input[name="Calculate-Profits"]').checked = extensionMySettings._autoCalculateProfits;
+            updatePanel.querySelector('input[name="Remove-Notices"]').checked = extensionMySettings._autoHideAllNotices; 
+            updatePanel.querySelector('input[name="Remember-ScrollBar"]').checked = extensionMySettings._autoRememberMyAssetsScrollBar; 
+            updatePanel.querySelector('input[name="UseLot-numbered"]').checked = extensionMySettings._autoChangeAllUseLot;   
             isMenuInjected = true;
             account_removedNoticesArray = extensionMySettings.RemovedNotices;
         }
-
-        // to make sure it runs only once
-        //if (extensionMySettings.RemovedNotices == null ) account_removedNoticesArray = [];
-        //else {
-        //    if (account_removedNoticesArray == null || account_removedNoticesArray.length == 0) account_removedNoticesArray = extensionMySettings.RemovedNotices;
-        //}
     }
 }
 function setExtensionMySetting(settingKey, settingValue) {
@@ -85,7 +88,7 @@ function GetInfluenceSettings(element) {
             case 'launcherPage':
                 return influenceSettings.state.launcherPage;
             case 'openHudMenu':
-                return influenceSettings.state.launcherPage;                
+                return influenceSettings.state.openHudMenu;                
             default:
                 return 0; 
         }
@@ -116,7 +119,16 @@ function onClickMyConfigOption(el) {
             break;
         case 'Calculate-Profits':
             setExtensionMySetting('_autoCalculateProfits', el.checked);
-            break;            
+            break;
+        case 'Remove-Notices':
+            setExtensionMySetting('_autoHideAllNotices', el.checked);
+            break;   
+        case 'Remember-ScrollBar':
+            setExtensionMySetting('_autoRememberMyAssetsScrollBar', el.checked);
+            break;   
+        case 'UseLot-numbered':
+            setExtensionMySetting('_autoChangeAllUseLot', el.checked);
+            break;               
     }
 }
 
@@ -426,12 +438,14 @@ function getColor(number) {
 // ============================================================= Main Functions =============================================================
 // Auto open all assets
 function openMyAssets(){
+    
     // is auto Open All Buildings enabled?
     if (extensionMySettings._autoAllOpenBuildings == true){
-        
+
         if (isElHudMenuItemSelectedByLabel(hudMenuItemLabelMyAssets) && AllMyCrews == 0 && OpenBuildings == 0 ) {
 
             const hudMenuPanel = document.getElementById('hudMenuPanel');
+            //document.getElementById('MySexy-structures-table-wrapper').scrollTop = this.scrollBarPosition
             
             // The My Assets  hud menu item is already selected
             // Find the last div containing the text "Across All My Crews"
@@ -496,6 +510,68 @@ function openMyAssets(){
             OpenBuildings = 0;
         }
     }
+}
+function ScrollBarMain(){
+    let menu = GetInfluenceSettings('openHudMenu');
+    if (menu == "MY_ASSETS") {
+    
+            if (ScrollBarStatus == 0){ // Initialize scroll bar 
+              
+                // element not definied, we find it 
+                if (ScrollBarElement == null) {
+                    const targetDiv = document.querySelector('div.sc-evzXkX.geZvpt');
+                    if (targetDiv) {
+                        console.log(targetDiv.scrollTop);
+                        ScrollBarElement = targetDiv;
+                        ScrollBarStatus = 1;
+
+                    } else {
+                        console.log('No div found, check if class definition changed?');
+                    }
+                }
+
+            } else if (ScrollBarStatus == 1) {
+                if (scrollBarRestore && scrollBarPosition > 0) {
+                    const maxScrollPosition = ScrollBarElement.scrollHeight - ScrollBarElement.clientHeight;
+                    
+                    if (maxScrollPosition >= (scrollBarSize - 200) && maxScrollPosition <= scrollBarSize){
+                        ScrollBarElement.scrollTop = scrollBarPosition;
+                        scrollBarRestore = false;
+                        //console.log(`Current Scrollbar size: ${maxScrollPosition} Scrollbar Size: ${scrollBarSize}`);
+                    }
+                }
+                else {
+                    scrollBarPosition = ScrollBarElement.scrollTop;                    
+                    scrollBarSize = ScrollBarElement.scrollHeight - ScrollBarElement.clientHeight;
+                    //console.log(`Scrollbar Position ${scrollBarPosition} Scrollbar Size: ${scrollBarSize}`);
+                }
+            } 
+        } 
+        else {
+            // scroll bar element null
+            ScrollBarElement = null;
+            ScrollBarStatus = 0;
+            scrollBarRestore = true;
+        }
+}
+function ReplaceAllUseLot(){
+    const hudMenuPanel = document.getElementById('hudMenuPanel');
+    // Loop through each div and check for "Use Lot"
+    const divs = hudMenuPanel.querySelectorAll('div');
+    // Loop through each div and check for "Use Lot"
+    divs.forEach(div => {
+        const label = div.querySelector('label');
+    
+        if (label && label.textContent.trim() === "Use Lot") {
+            // Get the first child of the div
+            const firstChild = div.children[1].children[0];
+        
+            if (firstChild && firstChild.tagName === 'SPAN') {
+                // Replace "Use Lot" with "Use " + the content of the first span
+                label.textContent = `Use ${firstChild.textContent}`;
+            }
+        }
+    });
 }
 // Auto calculate All profits
 function AutoProfit() {
@@ -578,6 +654,22 @@ function AutoProfit() {
 }
 
 // ============================================================= Work on progress =============================================================
+function changesOfNoticesMain(){
+    // call notice function to update all crap 
+    account_currentCrew = GetInfluenceSettings('selectedCrewId');
+    // crew change scan
+    if (account_currentCrew != 0 && account_currentCrew != account_previousCrew){
+        if (account_removedNoticesBoolean == false){
+            changesOfNotices(account_currentCrew)
+            account_removedNoticesBoolean = true;
+            account_previousCrew = account_currentCrew;
+        }
+        else { //activate boolean on false on crew change 
+            account_removedNoticesBoolean = false;
+        }
+
+    }
+}
 function changesOfNotices(crewId) {
     const coloredDivs = document.querySelectorAll('div[color="255,152,79"], div[color="255,86,77"]');
 
@@ -706,6 +798,13 @@ function cleanOldRemovedNotices() {
 }
 
 
+let ScrollBarStatus = 0;
+let ScrollBarElement = null;
+let scrollBarPosition = 0;
+let scrollBarRestore = false;
+let scrollBarSize = 0;
+
+
 setInterval(() => {
 
     if (account_LoadStatus != 2){
@@ -717,23 +816,15 @@ setInterval(() => {
     if (account_LoadStatus == 2){
         updateMySettings(); // injecting tools
         AutoProfit();
-        openMyAssets();      
+        openMyAssets();          
 
-        // call notice function to update all crap 
-        account_currentCrew = GetInfluenceSettings('selectedCrewId');
-        // crew change scan
-        if (account_currentCrew != 0 && account_currentCrew != account_previousCrew){
-            if (account_removedNoticesBoolean == false){
-                changesOfNotices(account_currentCrew)
-                account_removedNoticesBoolean = true;
-                account_previousCrew = account_currentCrew;
-            }
-            else { //activate boolean on false on crew change 
-                account_removedNoticesBoolean = false;
-            }
 
-        }
-        
+
+    if (extensionMySettings._autoHideAllNotices == true) changesOfNoticesMain();
+    if (extensionMySettings._autoChangeAllUseLot == true) ReplaceAllUseLot();
+    if (extensionMySettings._autoRememberMyAssetsScrollBar == true) ScrollBarMain();
+
     }
-
 }, 1000);
+
+
