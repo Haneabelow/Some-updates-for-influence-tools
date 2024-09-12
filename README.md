@@ -6,11 +6,14 @@ https://chromewebstore.google.com/detail/influence-tools/kopdkjlnbfiegpdjiebogka
 No changes needed to original influence tools, works with any kind of influence tools. 
 
 1. Auto open all buildings, very usefull if you have a lot crews.
-2. Auto profit calculations
+2. Hide un - needed notices forever !
+3. My assets scroll bar memory
+4. My assets all use lot numbered 
+5. Auto profit calculations
 
    ![image](https://github.com/user-attachments/assets/98c48967-4976-4b43-98a2-e27e88f99b06)
 
-3. Hide un - needed notices forever ! 
+
 
 
 INSTALLATION FOR GREENS:
