@@ -2,7 +2,7 @@
 // For Influence Tools 1.0.84_0
 // TODO:
     // 1.a One function to read settings be it mine or influence
-    // 1.b Change scroll bar location to fixed instead of class asap
+//DONE    // 1.b Change scroll bar location to fixed instead of class asap
 //DONE    // 2. UI changes: Lot notice control
 //DONE    // 3. UI changes: Lot numbers in my assets 
 //DONE    // 4. UI changes: scrollbar memory
@@ -232,8 +232,10 @@ function ShowOff(selectiontxt,inputdata,outputdata,srs) {
 
     // Process Input
     let totalInputCost = 0;
+    let itemprices = 0;
     inputdata.forEach(({ ItemName, ItemAmount, ItemPercentage }) => {
-        const price = cachedData.prices[ItemName] || 0;
+        if (prices != null) itemprices = prices || 0;
+        else itemprices = cachedData.prices[ItemName] || 0;
         const sr = srs || 1; // Default to 1 if SR is not available
         let reduction = 1;
 
@@ -241,7 +243,7 @@ function ShowOff(selectiontxt,inputdata,outputdata,srs) {
 
         const All_tones = ItemAmount * sr * reduction;
         const formattedTones = formatTones(All_tones);
-        const cost = price * All_tones;
+        const cost = itemprices * All_tones;
         color = getColor(cost);
         inputContent += `<div>${ItemName} (${formattedTones}): <label style="color: ${color};"> ${cost.toFixed(2)}</label> SWAY</div>`;
         totalInputCost += cost;
@@ -253,15 +255,17 @@ function ShowOff(selectiontxt,inputdata,outputdata,srs) {
 
     // Process Output
     let totalOutputCost = 0;
+    
     outputdata.forEach(({ ItemName, ItemAmount, ItemPercentage }) => {
-        const price = cachedData.prices[ItemName] || 0;
+        if (prices != null) itemprices = prices || 0;
+        else itemprices = cachedData.prices[ItemName] || 0;
         const sr = srs || 1; // Default to 1 if SR is not available
         let reduction = 1;
 
         if (ItemPercentage !== 100) reduction = (100-ItemPercentage)/100;
         const All_tones = ItemAmount * sr * reduction;
         const formattedTones = formatTones(All_tones);
-        const cost = price * All_tones;
+        const cost = itemprices * All_tones;
         color = getColor(cost);
         outputContent += `<div>${ItemName} (${formattedTones}): <label style="color: ${color};"> ${cost.toFixed(2)}</label> SWAY</div>`;
         totalOutputCost += cost;
@@ -519,9 +523,10 @@ function ScrollBarMain(){
               
                 // element not definied, we find it 
                 if (ScrollBarElement == null) {
-                    const targetDiv = document.querySelector('div.sc-evzXkX.geZvpt');
+                    const hudMenuPanel = document.getElementById('hudMenuPanel');
+                    const targetDiv = hudMenuPanel.children[0].children[1].children[0].children[1].children[0];
                     if (targetDiv) {
-                        console.log(targetDiv.scrollTop);
+                        //console.log(targetDiv.scrollTop);
                         ScrollBarElement = targetDiv;
                         ScrollBarStatus = 1;
 
@@ -817,8 +822,6 @@ setInterval(() => {
         updateMySettings(); // injecting tools
         AutoProfit();
         openMyAssets();          
-
-
 
     if (extensionMySettings._autoHideAllNotices == true) changesOfNoticesMain();
     if (extensionMySettings._autoChangeAllUseLot == true) ReplaceAllUseLot();
