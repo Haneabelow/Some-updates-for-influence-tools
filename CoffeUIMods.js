@@ -2,7 +2,7 @@
 // For Influence Tools 1.0.84_0
 // TODO:
     // 1.a One function to read settings be it mine or influence
-//DONE    // 1.b Change scroll bar location to fixed instead of class asap
+    // 1.b Change scroll bar location to fixed instead of class asap
 //DONE    // 2. UI changes: Lot notice control
 //DONE    // 3. UI changes: Lot numbers in my assets 
 //DONE    // 4. UI changes: scrollbar memory
@@ -705,6 +705,7 @@ function changesOfNotices(crewId) {
                 DateRemoved: currentDateInSeconds
             };
 
+            if (account_removedNoticesArray == null) account_removedNoticesArray = [];
             // Check if the notice with this LotId and CrewId is already present in the array
             const existingNotice = account_removedNoticesArray.find(notice => notice.LotId === lotId && notice.CrewId === crewId);
 
@@ -822,6 +823,8 @@ setInterval(() => {
         updateMySettings(); // injecting tools
         AutoProfit();
         openMyAssets();          
+
+
 
     if (extensionMySettings._autoHideAllNotices == true) changesOfNoticesMain();
     if (extensionMySettings._autoChangeAllUseLot == true) ReplaceAllUseLot();
