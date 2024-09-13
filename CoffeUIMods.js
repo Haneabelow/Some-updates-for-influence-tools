@@ -233,9 +233,11 @@ function ShowOff(selectiontxt,inputdata,outputdata,srs) {
     // Process Input
     let totalInputCost = 0;
     let itemprices = 0;
+    if (prices != null) itemprices = prices;
+    else itemprices = cachedData.prices;
+    
     inputdata.forEach(({ ItemName, ItemAmount, ItemPercentage }) => {
-        if (prices != null) itemprices = prices || 0;
-        else itemprices = cachedData.prices[ItemName] || 0;
+        const price = itemprices[ItemName] || 0;
         const sr = srs || 1; // Default to 1 if SR is not available
         let reduction = 1;
 
@@ -243,7 +245,7 @@ function ShowOff(selectiontxt,inputdata,outputdata,srs) {
 
         const All_tones = ItemAmount * sr * reduction;
         const formattedTones = formatTones(All_tones);
-        const cost = itemprices * All_tones;
+        const cost = price * All_tones;
         color = getColor(cost);
         inputContent += `<div>${ItemName} (${formattedTones}): <label style="color: ${color};"> ${cost.toFixed(2)}</label> SWAY</div>`;
         totalInputCost += cost;
@@ -257,15 +259,14 @@ function ShowOff(selectiontxt,inputdata,outputdata,srs) {
     let totalOutputCost = 0;
     
     outputdata.forEach(({ ItemName, ItemAmount, ItemPercentage }) => {
-        if (prices != null) itemprices = prices || 0;
-        else itemprices = cachedData.prices[ItemName] || 0;
+        const price = itemprices[ItemName] || 0;
         const sr = srs || 1; // Default to 1 if SR is not available
         let reduction = 1;
 
         if (ItemPercentage !== 100) reduction = (100-ItemPercentage)/100;
         const All_tones = ItemAmount * sr * reduction;
         const formattedTones = formatTones(All_tones);
-        const cost = itemprices * All_tones;
+        const cost = price * All_tones;
         color = getColor(cost);
         outputContent += `<div>${ItemName} (${formattedTones}): <label style="color: ${color};"> ${cost.toFixed(2)}</label> SWAY</div>`;
         totalOutputCost += cost;
