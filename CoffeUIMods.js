@@ -233,8 +233,18 @@ function ShowOff(selectiontxt,inputdata,outputdata,srs) {
     // Process Input
     let totalInputCost = 0;
     let itemprices = 0;
-    if (prices != null) itemprices = prices;
-    else itemprices = cachedData.prices;
+    
+    try {
+        if (prices !== null) {
+              itemprices = prices;
+          } else if (cachedData) {
+             itemprices = cachedData.prices;
+          }
+    } catch (error) {
+        if (cachedData) {
+            itemprices = cachedData.prices;
+        }
+    }
     
     inputdata.forEach(({ ItemName, ItemAmount, ItemPercentage }) => {
         const price = itemprices[ItemName] || 0;
