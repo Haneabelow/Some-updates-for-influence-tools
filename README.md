@@ -5,7 +5,7 @@ https://chromewebstore.google.com/detail/influence-tools/kopdkjlnbfiegpdjiebogka
 
 No changes needed to original influence tools, works with any kind of influence tools. 
 
-1. Auto open all buildings, very usefull if you have a lot crews.
+1. Can select to enable only select crew.
 2. Hide un - needed notices forever !
 3. My assets scroll bar memory
 4. My assets all use lot numbered 
