@@ -55,7 +55,7 @@ function updateMySettings() {
 
         let updatePanel = document.getElementById('e115-config-panel-wrapper')
         if (updatePanel != null){
-            injectMyConfigOptionCheckbox('All-OpenBuildings', '"My Assets"> Open ALL Buildings');
+            injectMyConfigOptionCheckbox('All-OpenBuildings', '"My Assets"> Open Selected Crew');
             injectMyConfigOptionCheckbox('Remember-ScrollBar', '"My Assets"> Scrollbar memory');
             injectMyConfigOptionCheckbox('UseLot-numbered', '"My Assets"> Lot Fields');
             injectMyConfigOptionCheckbox('Calculate-Profits', 'Manufacture> Show Profits');
@@ -467,7 +467,7 @@ function openMyAssets(){
             const divs = hudMenuPanel.querySelectorAll('div');
             let lastMatchingDiv = null;
             for (let div of divs) {
-                if (div.textContent.includes("Across All My Crews")) {
+                if (div.textContent.includes("Only Selected Crew")) {
                     lastMatchingDiv = div;
                 }
             }
